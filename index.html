@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2026 공현진 테마학습여행</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- HTML2Canvas for Image Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Google Fonts: Noto Sans KR & Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    @keyframes busMove {
+      0% { transform: translateX(0px); }
+      50% { transform: translateX(8px); }
+      100% { transform: translateX(0px); }
+    }
+    .animate-bus {
+      display: inline-block;
+      animation: busMove 1.2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <!-- 헤더 영역 -->
+  <header class="bg-gradient-to-r from-sky-600 via-indigo-600 to-indigo-800 text-white shadow-lg relative overflow-hidden">
+    <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl pointer-events-none">
+      <i class="fa-solid fa-bus"></i>
+    </div>
+    <div class="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8 relative z-10">
+      <div class="flex items-center space-x-2 text-sky-200 text-sm font-semibold mb-2">
+        <span class="bg-sky-500/30 px-2.5 py-0.5 rounded-full border border-sky-300/30"><i class="fa-solid fa-school mr-1"></i>공현진초등학교</span>
+        <span>•</span>
+        <span><i class="fa-regular fa-calendar-days mr-1"></i>2026. 11. 11 (수) ~ 11. 13 (금)</span>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">
+        2026 공현진 테마학습여행 <span class="text-yellow-300 text-2xl font-bold">(안)</span>
+      </h1>
+      <p class="mt-2 text-sky-100 text-sm sm:text-base max-w-2xl">
+        실시간 테마학습 일정, 식사 장소, 그리고 방 배정을 한눈에 확인하세요.
+      </p>
+
+      <!-- 네비게이션 메인 탭 (순서: 일정 -> 식사 -> 방 배정) -->
+      <div class="mt-6 flex bg-black/20 p-1.5 rounded-2xl max-w-md border border-white/20 text-sm font-bold">
+        <button id="tabBtn-schedule" onclick="switchMainTab('schedule')" class="flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 bg-white text-indigo-900 shadow-md">
+          <i class="fa-solid fa-clock"></i> 일정 (타임라인)
+        </button>
+        <button id="tabBtn-meal" onclick="switchMainTab('meal')" class="flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 text-sky-100 hover:text-white">
+          <i class="fa-solid fa-utensils"></i> 식사 일정
+        </button>
+        <button id="tabBtn-room" onclick="switchMainTab('room')" class="flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 text-sky-100 hover:text-white">
+          <i class="fa-solid fa-bed"></i> 방 배정
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 메인 콘텐트 -->
+  <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-6 sm:px-6 lg:px-8">
+
+    <!-- ================= 탭 1: 테마학습 세부 일정 섹션 (기본 표시) ================= -->
+    <section id="section-schedule" class="tab-section">
+      <!-- 실시간 진행 상태 배너 및 제어 -->
+      <div class="bg-slate-900 text-white p-5 rounded-2xl mb-6 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-bold mb-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            실시간 자동 일정 트래커 동작 중
+          </div>
+          <h2 class="text-xl font-bold">버스 타고 떠나는 테마학습 여행</h2>
+          <p class="text-slate-400 text-xs mt-1" id="realtimeStatusText">현재 시각을 기준으로 일정 및 버스 위치를 추적합니다.</p>
+        </div>
+        <button 
+          onclick="checkCurrentSchedule(true)" 
+          class="bg-sky-500 hover:bg-sky-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-lg shrink-0"
+        >
+          <i class="fa-solid fa-location-dot"></i> 지금 무엇을 하나요? (현재 위치 확인)
+        </button>
+      </div>
+
+      <!-- 일자 탭 서브 네비게이션 -->
+      <div class="flex border-b border-slate-200 mb-6 gap-2">
+        <button onclick="switchDayTab(1)" id="dayTab-1" class="day-tab-btn border-b-2 border-sky-600 text-sky-600 font-bold px-4 py-2 text-sm flex items-center gap-1.5">
+          <i class="fa-regular fa-calendar text-xs"></i> 1일차 (11.11 수)
+        </button>
+        <button onclick="switchDayTab(2)" id="dayTab-2" class="day-tab-btn border-b-2 border-transparent text-slate-500 hover:text-slate-800 font-medium px-4 py-2 text-sm flex items-center gap-1.5">
+          <i class="fa-regular fa-calendar text-xs"></i> 2일차 (11.12 목)
+        </button>
+        <button onclick="switchDayTab(3)" id="dayTab-3" class="day-tab-btn border-b-2 border-transparent text-slate-500 hover:text-slate-800 font-medium px-4 py-2 text-sm flex items-center gap-1.5">
+          <i class="fa-regular fa-calendar text-xs"></i> 3일차 (11.13 금)
+        </button>
+      </div>
+
+      <!-- 일정 타임라인 컨테이너 -->
+      <div id="scheduleTimeline" class="relative border-l-2 border-sky-200 ml-4 sm:ml-6 space-y-6 pb-6"></div>
+    </section>
+
+    <!-- ================= 탭 2: 식사 일정 섹션 ================= -->
+    <section id="section-meal" class="tab-section hidden">
+      <div class="bg-indigo-900 text-white p-6 rounded-2xl mb-6 shadow-md relative overflow-hidden">
+        <div class="relative z-10">
+          <h2 class="text-2xl font-bold flex items-center gap-2">
+            <i class="fa-solid fa-utensils text-yellow-400"></i> 테마학습 식사안내
+          </h2>
+          <p class="text-indigo-200 text-sm mt-1">11월 11일 ~ 11월 13일 동안의 매끼 식사 장소 및 메뉴 정보입니다.</p>
+        </div>
+      </div>
+
+      <!-- 날짜별 식사 안내 카드 -->
+      <div class="space-y-8" id="mealsContainer"></div>
+    </section>
+
+    <!-- ================= 탭 3: 방 배정 섹션 ================= -->
+    <section id="section-room" class="tab-section hidden">
+      <!-- 통계 뱃지 -->
+      <div class="mb-6 flex flex-wrap gap-2 text-xs sm:text-sm font-medium">
+        <div class="bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-xs flex items-center">
+          <i class="fa-solid fa-door-closed text-yellow-500 mr-2"></i>총 10개 학생 방 (13층, 9층, 5층)
+        </div>
+        <div class="bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-xs flex items-center">
+          <i class="fa-solid fa-user-group text-blue-500 mr-2"></i>2인실 2개
+        </div>
+        <div class="bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-xs flex items-center">
+          <i class="fa-solid fa-users text-emerald-500 mr-2"></i>3인실 7개
+        </div>
+        <div class="bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-xs flex items-center">
+          <i class="fa-solid fa-people-roof text-purple-500 mr-2"></i>4인실 1개
+        </div>
+      </div>
+
+      <!-- 검색 및 필터 파트 -->
+      <div class="bg-white rounded-2xl shadow-md p-4 sm:p-6 mb-6 border border-slate-200/80">
+        <!-- 키워드 검색바 -->
+        <div class="relative mb-4">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <i class="fa-solid fa-magnifying-glass text-lg"></i>
+          </div>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="학생 이름 검색 (예: 김소윤, 김호경... 띄어쓰기로 다중검색)" 
+            class="w-full pl-11 pr-10 py-3 bg-slate-50 border border-slate-300 text-slate-900 text-base rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 focus:bg-white transition-all shadow-sm"
+            oninput="filterRooms()"
+          >
+          <button 
+            id="clearSearchBtn" 
+            onclick="clearSearch()" 
+            class="hidden absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600"
+          >
+            <i class="fa-solid fa-circle-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <!-- 태그 필터 영역 -->
+        <div class="space-y-3">
+          <!-- 성별 필터 -->
+          <div class="flex flex-wrap items-center gap-2 text-sm">
+            <span class="w-14 font-semibold text-slate-500 flex items-center gap-1">
+              <i class="fa-solid fa-venus-mars text-xs"></i> 성별
+            </span>
+            <div class="flex flex-wrap gap-1.5" id="genderFilterGroup">
+              <button onclick="setFilter('gender', 'ALL')" data-gender="ALL" class="filter-btn active bg-slate-800 text-white px-3 py-1.5 rounded-lg font-medium text-xs transition">전체</button>
+              <button onclick="setFilter('gender', 'M')" data-gender="M" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-medium text-xs transition">남학생</button>
+              <button onclick="setFilter('gender', 'F')" data-gender="F" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-medium text-xs transition">여학생</button>
+            </div>
+          </div>
+
+          <!-- 층별 필터 -->
+          <div class="flex flex-wrap items-center gap-2 text-sm">
+            <span class="w-14 font-semibold text-slate-500 flex items-center gap-1">
+              <i class="fa-solid fa-building text-xs"></i> 층수
+            </span>
+            <div class="flex flex-wrap gap-1.5" id="floorFilterGroup">
+              <button onclick="setFilter('floor', 'ALL')" data-floor="ALL" class="filter-btn active bg-slate-800 text-white px-3 py-1.5 rounded-lg font-medium text-xs transition">전체</button>
+              <button onclick="setFilter('floor', '13층')" data-floor="13층" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-medium text-xs transition">13층 (여)</button>
+              <button onclick="setFilter('floor', '9층')" data-floor="9층" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-medium text-xs transition">9층 (남)</button>
+              <button onclick="setFilter('floor', '5층')" data-floor="5층" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-medium text-xs transition">5층 (남)</button>
+            </div>
+          </div>
+
+          <!-- 방 유형 필터 -->
+          <div class="flex flex-wrap items-center gap-2 text-sm">
+            <span class="w-14 font-semibold text-slate-500 flex items-center gap-1">
+              <i class="fa-solid fa-bed text-xs"></i> 방유형
+            </span>
+            <div class="flex flex-wrap gap-1.5" id="typeFilterGroup">
+              <button onclick="setFilter('type', 'ALL')" data-type="ALL" class="filter-btn active bg-slate-800 text-white px-3 py-1.5 rounded-lg font-medium text-xs transition">전체</button>
+              <button onclick="setFilter('type', '2인실')" data-type="2인실" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-medium text-xs transition">2인실</button>
+              <button onclick="setFilter('type', '3인실')" data-type="3인실" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-medium text-xs transition">3인실</button>
+              <button onclick="setFilter('type', '4인실')" data-type="4인실" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-medium text-xs transition">4인실</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span class="flex items-center gap-1 text-slate-500">
+            <i class="fa-solid fa-circle-info text-sky-500"></i> 이름으로 검색하여 몇 호실에 배정되었는지 바로 확인하세요.
+          </span>
+          <button onclick="resetFilters()" class="text-slate-500 hover:text-sky-600 underline font-medium cursor-pointer">
+            <i class="fa-solid fa-rotate-left mr-1"></i>필터 초기화
+          </button>
+        </div>
+      </div>
+
+      <!-- 보기 모드 전환 및 결과 컨트롤 -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+          <span>검색 결과</span>
+          <span id="resultCount" class="bg-sky-100 text-sky-800 text-xs px-2.5 py-0.5 rounded-full font-bold">10개 방</span>
+        </div>
+
+        <div class="flex items-center space-x-2 self-end sm:self-auto">
+          <button 
+            onclick="openTableModal()" 
+            class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition shadow-sm"
+          >
+            <i class="fa-solid fa-table"></i> 원본 표 형태로 보기
+          </button>
+
+          <div class="bg-slate-200 p-0.5 rounded-lg flex text-xs">
+            <button id="viewCardBtn" onclick="setViewMode('card')" class="px-2.5 py-1.5 rounded-md font-medium text-slate-800 bg-white shadow-sm">
+              <i class="fa-solid fa-grip-vertical mr-1"></i>카드
+            </button>
+            <button id="viewListBtn" onclick="setViewMode('list')" class="px-2.5 py-1.5 rounded-md font-medium text-slate-600 hover:text-slate-900">
+              <i class="fa-solid fa-list mr-1"></i>목록
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 방 카드 컨테이너 -->
+      <div id="roomsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+      <!-- 검색 결과 없을 때 -->
+      <div id="noResults" class="hidden bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center my-6">
+        <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400 text-2xl">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+        <h3 class="text-slate-700 font-bold text-lg mb-1">검색 결과가 없습니다</h3>
+        <p class="text-slate-500 text-sm mb-4">입력하신 이름이나 필터 조건에 해당하는 학생이 없습니다.</p>
+        <button onclick="resetFilters()" class="bg-sky-600 text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-sky-700 transition">
+          전체목록 다시보기
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 하단 풋터 -->
+  <footer class="bg-slate-900 text-slate-400 py-8 border-t border-slate-800 mt-12 text-xs">
+    <div class="max-w-5xl mx-auto px-4 text-center sm:text-left sm:flex sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+      <div>
+        <p class="font-bold text-slate-200 mb-1">2026 공현진 테마학습여행 종합 안내</p>
+        <p class="text-slate-400">일시: 2026년 11월 11일 ~ 11월 13일 | 문의: 담당 교무실</p>
+      </div>
+      <div class="text-slate-400">
+        <span>본 데이터는 제출된 테마학습여행 계획(안)에 기반합니다.</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 원본 표 및 이미지 저장 모달 (방배정) -->
+  <div id="tableModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div class="p-4 sm:p-5 bg-slate-800 text-white flex justify-between items-center">
+        <div>
+          <h2 class="text-lg font-bold flex items-center gap-2">
+            <i class="fa-solid fa-file-invoice text-yellow-400"></i>
+            테마학습여행 층별/호수별 방배정 표
+          </h2>
+          <p class="text-xs text-slate-300 mt-0.5">13층 (여학생), 9층 (남학생), 5층 (남학생) 전체 배치표</p>
+        </div>
+        <button onclick="closeTableModal()" class="text-slate-400 hover:text-white p-2 rounded-lg text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-grow bg-slate-50" id="captureArea">
+        <div class="text-center mb-6 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <h3 class="text-xl font-extrabold text-slate-900 mb-1">2026 공현진 테마학습여행 층별 방배정</h3>
+          <p class="text-xs text-slate-500">공현진초등학교 | 2026.11.11 ~ 11.13</p>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-slate-300 bg-white shadow-sm">
+          <table class="w-full text-xs sm:text-sm text-center border-collapse min-w-[700px]">
+            <thead>
+              <tr class="bg-slate-200 border-b border-slate-300 text-slate-800 font-bold">
+                <th class="p-2 border-r border-slate-300 w-16">구분</th>
+                <th class="p-2 border-r border-slate-300">1호</th>
+                <th class="p-2 border-r border-slate-300">2호</th>
+                <th class="p-2 border-r border-slate-300">3호</th>
+                <th class="p-2 border-r border-slate-300">4호</th>
+                <th class="p-2 border-r border-slate-300">5호</th>
+                <th class="p-2 border-r border-slate-300">6호</th>
+                <th class="p-2">7호</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-300 text-xs">
+              <!-- 13층 -->
+              <tr>
+                <td class="p-2 font-bold bg-slate-100 border-r border-slate-300 text-slate-800">13층</td>
+                <td class="p-2 border-r border-slate-300 align-top">
+                  <span class="font-bold text-pink-700 block mb-1">(여)3인실 (1301호)</span>
+                  <p class="text-slate-800">손 율, 임서진,<br>남서현</p>
+                </td>
+                <td class="p-2 border-r border-slate-300 align-top">
+                  <span class="font-bold text-pink-700 block mb-1">(여)3인실 (1302호)</span>
+                  <p class="text-slate-800">유지은, 유채은,<br>김차윤</p>
+                </td>
+                <td class="p-2 border-r border-slate-300 align-top">
+                  <span class="font-bold text-pink-700 block mb-1">(여)3인실 (1303호)</span>
+                  <p class="text-slate-800">박지안, 김소윤,<br>이지민</p>
+                </td>
+                <td class="p-2 border-r border-slate-300 align-top">
+                  <span class="font-bold text-pink-700 block mb-1">(여)3인실 (1304호)</span>
+                  <p class="text-slate-800">최한별, 남혜준,<br>이승빈</p>
+                </td>
+                <td class="p-2 border-r border-slate-300 bg-slate-200/80 text-slate-600 align-top">
+                  <span class="font-bold block mb-1 text-slate-700">(여)2인실(T)</span>
+                  <p class="font-semibold">임제헌, 홍제나</p>
+                  <span class="text-[10px] text-slate-500">(교사)</span>
+                </td>
+                <td class="p-2 border-r border-slate-300 align-top">
+                  <span class="font-bold text-purple-700 block mb-1">(여)4인실 (1306호)</span>
+                  <p class="text-slate-800">유하은, 이채원,<br>이나윤, 전수빈</p>
+                </td>
+                <td class="p-2 bg-slate-50"></td>
+              </tr>
+              <!-- 9층 -->
+              <tr class="border-t border-slate-300">
+                <td class="p-2 font-bold bg-slate-100 border-r border-slate-300 text-slate-800">9층</td>
+                <td class="p-2 border-r border-slate-300 align-top">
+                  <span class="font-bold text-blue-700 block mb-1">(남)3인실 (901호)</span>
+                  <p class="text-slate-800">이 건, 손이도,<br>최 윤</p>
+                </td>
+                <td class="p-2 border-r border-slate-300 align-top">
+                  <span class="font-bold text-blue-700 block mb-1">(남)3인실 (902호)</span>
+                  <p class="text-slate-800">정세민, 김호경,<br>김건우</p>
+                </td>
+                <td class="p-2 border-r border-slate-300 align-top">
+                  <span class="font-bold text-blue-700 block mb-1">(남)3인실 (903호)</span>
+                  <p class="text-slate-800">이서준, 이서찬,<br>김민건</p>
+                </td>
+                <td class="p-2 border-r border-slate-300 bg-slate-200/80 text-slate-600 align-top">
+                  <span class="font-bold block mb-1 text-slate-700">(남)2인실(T)</span>
+                  <p class="font-semibold">황우정, 정명훈</p>
+                  <span class="text-[10px] text-slate-500">(교사)</span>
+                </td>
+                <td class="p-2 border-r border-slate-300 bg-slate-50"></td>
+                <td class="p-2 border-r border-slate-300 bg-slate-50"></td>
+                <td class="p-2 bg-slate-50"></td>
+              </tr>
+              <!-- 5층 -->
+              <tr class="border-t border-slate-300">
+                <td class="p-2 font-bold bg-slate-100 border-r border-slate-300 text-slate-800">5층</td>
+                <td class="p-2 border-r border-slate-300 bg-slate-50"></td>
+                <td class="p-2 border-r border-slate-300 bg-slate-50"></td>
+                <td class="p-2 border-r border-slate-300 bg-slate-50"></td>
+                <td class="p-2 border-r border-slate-300 align-top">
+                  <span class="font-bold text-sky-700 block mb-1">(남)2인실 (504호)</span>
+                  <p class="text-slate-800">조영민, 이수민</p>
+                </td>
+                <td class="p-2 border-r border-slate-300 align-top">
+                  <span class="font-bold text-sky-700 block mb-1">(남)2인실 (505호)</span>
+                  <p class="text-slate-800">최한결, 장성호</p>
+                </td>
+                <td class="p-2 border-r border-slate-300 bg-slate-50"></td>
+                <td class="p-2 bg-slate-200/80 text-slate-600 align-top">
+                  <span class="font-bold block mb-1 text-slate-700">(남)1인실(T)</span>
+                  <p class="font-semibold">교감</p>
+                  <span class="text-[10px] text-slate-500">(교사)</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-100 border-t border-slate-200 flex justify-between items-center">
+        <p class="text-xs text-slate-500">
+          <i class="fa-solid fa-mobile-screen mr-1"></i> 화면을 이미지로 다운로드하여 소장하세요.
+        </p>
+        <div class="flex space-x-2">
+          <button 
+            onclick="downloadImage()" 
+            class="bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1.5 transition shadow-sm"
+          >
+            <i class="fa-solid fa-download"></i> 이미지로 저장
+          </button>
+          <button 
+            onclick="closeTableModal()" 
+            class="bg-slate-300 hover:bg-slate-400 text-slate-800 text-xs font-bold px-4 py-2 rounded-lg transition"
+          >
+            닫기
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 토스트 알림 메시지 -->
+  <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center space-x-2 text-xs">
+    <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+    <span id="toastMsg">알림 메시지</span>
+  </div>
+
+  <script>
+    // 1. 방배정 데이터 정의
+    const roomData = [
+      // 13층 여학생
+      {
+        id: 1,
+        roomNo: "1301호",
+        floor: "13층",
+        gender: "F",
+        genderLabel: "여학생",
+        type: "3인실",
+        capacity: 3,
+        members: ["손 율", "임서진", "남서현"],
+        badgeBg: "bg-pink-100 text-pink-800 border-pink-200"
+      },
+      {
+        id: 2,
+        roomNo: "1302호",
+        floor: "13층",
+        gender: "F",
+        genderLabel: "여학생",
+        type: "3인실",
+        capacity: 3,
+        members: ["유지은", "유채은", "김차윤"],
+        badgeBg: "bg-pink-100 text-pink-800 border-pink-200"
+      },
+      {
+        id: 3,
+        roomNo: "1303호",
+        floor: "13층",
+        gender: "F",
+        genderLabel: "여학생",
+        type: "3인실",
+        capacity: 3,
+        members: ["박지안", "김소윤", "이지민"],
+        badgeBg: "bg-pink-100 text-pink-800 border-pink-200"
+      },
+      {
+        id: 4,
+        roomNo: "1304호",
+        floor: "13층",
+        gender: "F",
+        genderLabel: "여학생",
+        type: "3인실",
+        capacity: 3,
+        members: ["최한별", "남혜준", "이승빈"],
+        badgeBg: "bg-pink-100 text-pink-800 border-pink-200"
+      },
+      {
+        id: 5,
+        roomNo: "1306호",
+        floor: "13층",
+        gender: "F",
+        genderLabel: "여학생",
+        type: "4인실",
+        capacity: 4,
+        members: ["유하은", "이채원", "이나윤", "전수빈"],
+        badgeBg: "bg-purple-100 text-purple-800 border-purple-200"
+      },
+      // 9층 남학생
+      {
+        id: 6,
+        roomNo: "901호",
+        floor: "9층",
+        gender: "M",
+        genderLabel: "남학생",
+        type: "3인실",
+        capacity: 3,
+        members: ["이 건", "손이도", "최 윤"],
+        badgeBg: "bg-blue-100 text-blue-800 border-blue-200"
+      },
+      {
+        id: 7,
+        roomNo: "902호",
+        floor: "9층",
+        gender: "M",
+        genderLabel: "남학생",
+        type: "3인실",
+        capacity: 3,
+        members: ["정세민", "김호경", "김건우"],
+        badgeBg: "bg-blue-100 text-blue-800 border-blue-200"
+      },
+      {
+        id: 8,
+        roomNo: "903호",
+        floor: "9층",
+        gender: "M",
+        genderLabel: "남학생",
+        type: "3인실",
+        capacity: 3,
+        members: ["이서준", "이서찬", "김민건"],
+        badgeBg: "bg-blue-100 text-blue-800 border-blue-200"
+      },
+      // 5층 남학생
+      {
+        id: 9,
+        roomNo: "504호",
+        floor: "5층",
+        gender: "M",
+        genderLabel: "남학생",
+        type: "2인실",
+        capacity: 2,
+        members: ["조영민", "이수민"],
+        badgeBg: "bg-sky-100 text-sky-800 border-sky-200"
+      },
+      {
+        id: 10,
+        roomNo: "505호",
+        floor: "5층",
+        gender: "M",
+        genderLabel: "남학생",
+        type: "2인실",
+        capacity: 2,
+        members: ["최한결", "장성호"],
+        badgeBg: "bg-sky-100 text-sky-800 border-sky-200"
+      }
+    ];
+
+    // 2. 식사 일정 데이터 (서울타워 관련 내용 완전 제거 및 실제 식당/메뉴로 정돈)
+    const mealData = [
+      {
+        date: "11월 11일 (수) - 1일차",
+        meals: [
+          {
+            type: "중식",
+            place: "한식당 (서울)",
+            desc: "서울 도착 후 즐기는 정갈하고 푸짐한 한식 식사",
+            img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80",
+            tag: "한식"
+          },
+          {
+            type: "석식",
+            place: "애슐리 뷔페 (대학로/종각)",
+            desc: "다양한 샐러드바와 뷔페 메뉴를 자유롭게 즐기는 풍성한 저녁",
+            img: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
+            tag: "패밀리 뷔페"
+          }
+        ]
+      },
+      {
+        date: "11월 12일 (목) - 2일차",
+        meals: [
+          {
+            type: "조식",
+            place: "숙소 조식 (잠실 로사나 호텔)",
+            desc: "숙소 내 뷔페식 조식 (빵, 밥, 국, 음료 등)",
+            img: "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=800&q=80",
+            tag: "호텔 뷔페"
+          },
+          {
+            type: "중식",
+            place: "돈까스 전문점 (롯데월드)",
+            desc: "롯데월드 어드벤처 체험 중 맛보는 바삭한 돈까스",
+            img: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80",
+            tag: "경양식/돈까스"
+          },
+          {
+            type: "석식",
+            place: "석쇠불고기 전문점 (석촌점)",
+            desc: "불향 가득한 석쇠불고기와 든든한 한상 차림",
+            img: "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80",
+            tag: "한식 전문점"
+          }
+        ]
+      },
+      {
+        date: "11월 13일 (금) - 3일차",
+        meals: [
+          {
+            type: "조식",
+            place: "숙소 조식 (잠실 로사나 호텔)",
+            desc: "숙소 뷔페 조식 후 체크아웃 준비",
+            img: "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=800&q=80",
+            tag: "호텔 뷔페"
+          },
+          {
+            type: "중식",
+            place: "피자 뷔페 (아차산점)",
+            desc: "갓 구운 다양한 피자와 샐러드를 마음껏 맛보는 점심",
+            img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80",
+            tag: "피자 뷔페"
+          }
+        ]
+      }
+    ];
+
+    // 3. 이미지 시간표 3장에 맞춘 100% 일치 세부 일정 데이터
+    const scheduleData = {
+      1: [
+        { time: "08:00", title: "학교 출발", desc: "공현진초등학교 집결 후 버스 탑승 출발", icon: "fa-bus", type: "move" },
+        { time: "09:30", title: "휴식 (휴게소)", desc: "고속도로 휴게소 들러 휴식 및 화장실 이용", icon: "fa-mug-hot", type: "rest" },
+        { time: "11:00", title: "서대문형무소 도착 견학", desc: "역사 체험 및 서대문형무소 역사관 관람", icon: "fa-landmark", type: "tour" },
+        { time: "12:30", title: "점심식사 (중식: 한식당)", desc: "정갈한 한식 메뉴로 맛있는 점심 식사", icon: "fa-utensils", type: "meal" },
+        { time: "13:30", title: "경복궁 견학", desc: "조선 왕조의 으뜸 궁궐 경복궁 역사 탐방 (*교원증 지참)", icon: "fa-archway", type: "tour" },
+        { time: "17:30", title: "저녁식사, 대학로 산책", desc: "애슐리 뷔페 석식 후 대학로 거리를 산책하며 문화 체험", icon: "fa-utensils", type: "meal" },
+        { time: "20:00", title: "연극관람 (대학로 소극장)", desc: "대학로 소극장에서 흥미진진한 연극 관람 (*학교 자체 예매)", icon: "fa-masks-theater", type: "tour" },
+        { time: "22:30", title: "숙소 도착, 휴식", desc: "잠실 로사나 호텔 체크인 및 객실 입실", icon: "fa-hotel", type: "rest" },
+        { time: "23:00", title: "학생 건강 확인, 세면 및 취침", desc: "인원 점검, 세면 후 편안한 점등 취침", icon: "fa-bed", type: "rest" }
+      ],
+      2: [
+        { time: "07:00", title: "아침 식사 및 준비", desc: "호텔 조식 뷔페 식사 및 하루 출발 준비", icon: "fa-utensils", type: "meal" },
+        { time: "08:30", title: "롯데월드 이동", desc: "전용 버스로 롯데월드로 이동", icon: "fa-bus", type: "move" },
+        { time: "10:00", title: "롯데월드 어드벤처 체험", desc: "놀이기구 및 모험 체험 활동 진행", icon: "fa-fort-awesome", type: "tour" },
+        { time: "12:30", title: "점심식사 (중식: 돈까스)", desc: "바삭하고 고소한 돈까스 점심 식사", icon: "fa-utensils", type: "meal" },
+        { time: "14:30", title: "롯데월드 아쿠아리움 체험", desc: "해양 생태계 체험 및 아쿠아리움 관람", icon: "fa-fish-fins", type: "tour" },
+        { time: "17:00", title: "민속박물관 체험", desc: "우리 겨레의 역사와 생활문화를 배우는 민속박물관 관람", icon: "fa-landmark-dome", type: "tour" },
+        { time: "18:30", title: "저녁 식사 (석식: 석쇠불고기)", desc: "풍미 깊은 석쇠불고기로 든든한 저녁 식사", icon: "fa-utensils", type: "meal" },
+        { time: "20:30", title: "숙소 이동, 휴식", desc: "잠실 로사나 호텔로 이동 및 객실 휴식", icon: "fa-hotel", type: "rest" },
+        { time: "22:00", title: "학생 건강 확인, 세면 및 취침", desc: "건강 상태 확인 및 세면 후 취침", icon: "fa-bed", type: "rest" }
+      ],
+      3: [
+        { time: "07:00", title: "아침 식사 및 준비", desc: "호텔 조식 식사 및 짐 정리", icon: "fa-utensils", type: "meal" },
+        { time: "08:30", title: "체크아웃 후 이동", desc: "호텔 체크아웃 완료 후 전쟁기념관으로 출발", icon: "fa-bus", type: "move" },
+        { time: "09:30", title: "전쟁기념관 견학", desc: "대한민국 호국 역사 및 전쟁기념관 전시물 관람", icon: "fa-shield-halved", type: "tour" },
+        { time: "11:30", title: "점심식사 (중식: 피자뷔페)", desc: "피자 뷔페에서 다채로운 피자 점심 식사", icon: "fa-pizza-slice", type: "meal" },
+        { time: "12:30", title: "어린이대공원 (동물원) 견학", desc: "동물원 및 대공원 야외 자연 생태 관람", icon: "fa-hippo", type: "tour" },
+        { time: "14:00", title: "학교로 출발", desc: "고성 공현진초등학교로 귀가 출발", icon: "fa-bus", type: "move" },
+        { time: "15:30", title: "휴식 (휴게소)", desc: "귀가길 고속도로 휴게소 들러 휴식", icon: "fa-mug-hot", type: "rest" },
+        { time: "17:00", title: "학교 도착", desc: "공현진초등학교 도착 후 안심 귀가", icon: "fa-flag-checkered", type: "finish" }
+      ]
+    };
+
+    // 상태 관리
+    let activeMainTab = 'schedule';
+    let activeDayTab = 1;
+    let currentViewMode = 'card';
+    let currentFilters = { gender: 'ALL', floor: 'ALL', type: 'ALL' };
+
+    // 4. 메인 탭 전환 함수
+    function switchMainTab(tab) {
+      activeMainTab = tab;
+      document.querySelectorAll('.tab-section').forEach(el => el.classList.add('hidden'));
+
+      const roomBtn = document.getElementById('tabBtn-room');
+      const mealBtn = document.getElementById('tabBtn-meal');
+      const scheduleBtn = document.getElementById('tabBtn-schedule');
+
+      [roomBtn, mealBtn, scheduleBtn].forEach(b => {
+        b.className = 'flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 text-sky-100 hover:text-white';
+      });
+
+      if (tab === 'room') {
+        document.getElementById('section-room').classList.remove('hidden');
+        roomBtn.className = 'flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 bg-white text-indigo-900 shadow-md';
+      } else if (tab === 'meal') {
+        document.getElementById('section-meal').classList.remove('hidden');
+        mealBtn.className = 'flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 bg-white text-indigo-900 shadow-md';
+      } else if (tab === 'schedule') {
+        document.getElementById('section-schedule').classList.remove('hidden');
+        scheduleBtn.className = 'flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 bg-white text-indigo-900 shadow-md';
+      }
+    }
+
+    // 5. 방배정 필터링 & 렌더링
+    function setFilter(category, val) {
+      currentFilters[category] = val;
+      const groupEl = document.getElementById(`${category}FilterGroup`);
+      if (groupEl) {
+        groupEl.querySelectorAll('button').forEach(btn => {
+          if (btn.getAttribute(`data-${category}`) === val) {
+            btn.className = 'filter-btn active bg-slate-800 text-white px-3 py-1.5 rounded-lg font-medium text-xs transition';
+          } else {
+            btn.className = 'filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-medium text-xs transition';
+          }
+        });
+      }
+      filterRooms();
+    }
+
+    function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      filterRooms();
+    }
+
+    function resetFilters() {
+      document.getElementById('searchInput').value = '';
+      setFilter('gender', 'ALL');
+      setFilter('floor', 'ALL');
+      setFilter('type', 'ALL');
+    }
+
+    function filterRooms() {
+      const searchVal = document.getElementById('searchInput').value.trim();
+      const clearBtn = document.getElementById('clearSearchBtn');
+      if (searchVal) clearBtn.classList.remove('hidden');
+      else clearBtn.classList.add('hidden');
+
+      const keywords = searchVal ? searchVal.split(/\s+/).filter(k => k) : [];
+
+      const filtered = roomData.filter(room => {
+        if (currentFilters.gender !== 'ALL' && room.gender !== currentFilters.gender) return false;
+        if (currentFilters.floor !== 'ALL' && room.floor !== currentFilters.floor) return false;
+        if (currentFilters.type !== 'ALL' && room.type !== currentFilters.type) return false;
+
+        if (keywords.length > 0) {
+          return keywords.some(kw => {
+            const matchName = room.members.some(m => m.includes(kw));
+            const matchRoom = room.roomNo.includes(kw);
+            const matchFloor = room.floor.includes(kw);
+            return matchName || matchRoom || matchFloor;
+          });
+        }
+        return true;
+      });
+
+      renderRooms(filtered, keywords);
+    }
+
+    function renderRooms(rooms, keywords = []) {
+      const container = document.getElementById('roomsContainer');
+      const noResults = document.getElementById('noResults');
+      const countEl = document.getElementById('resultCount');
+
+      countEl.innerText = `${rooms.length}개 방`;
+
+      if (rooms.length === 0) {
+        container.classList.add('hidden');
+        noResults.classList.remove('hidden');
+        return;
+      }
+
+      container.classList.remove('hidden');
+      noResults.classList.add('hidden');
+
+      if (currentViewMode === 'card') {
+        container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4";
+        container.innerHTML = rooms.map(room => {
+          const membersHtml = room.members.map(m => {
+            const isMatched = keywords.some(kw => m.includes(kw));
+            const highlightClass = isMatched ? 'bg-yellow-200 text-yellow-900 font-bold px-1 rounded' : '';
+            return `
+              <div class="flex items-center space-x-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200/70">
+                <div class="w-7 h-7 rounded-full bg-white shadow-xs border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">
+                  <i class="fa-solid fa-user text-slate-400 text-xs"></i>
+                </div>
+                <span class="text-sm font-semibold text-slate-800 ${highlightClass}">${m}</span>
+              </div>
+            `;
+          }).join('');
+
+          return `
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition duration-200 overflow-hidden flex flex-col justify-between">
+              <div>
+                <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-50 to-white">
+                  <div class="flex items-center space-x-2">
+                    <span class="font-extrabold text-lg text-slate-900">${room.roomNo}</span>
+                    <span class="text-xs px-2 py-0.5 rounded-full border font-semibold ${room.badgeBg}">${room.floor} (${room.genderLabel})</span>
+                  </div>
+                  <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">${room.type}</span>
+                </div>
+                <div class="p-4">
+                  <p class="text-xs text-slate-400 font-semibold mb-2">투숙 인원 (${room.members.length}명)</p>
+                  <div class="grid grid-cols-2 gap-2">
+                    ${membersHtml}
+                  </div>
+                </div>
+              </div>
+              <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex justify-between items-center text-xs">
+                <span class="text-slate-400"><i class="fa-solid fa-hotel mr-1"></i>잠실 로사나 호텔</span>
+                <button onclick="copyRoomInfo('${room.roomNo}', '${room.members.join(', ')}')" class="text-sky-600 hover:text-sky-700 font-semibold flex items-center gap-1">
+                  <i class="fa-regular fa-copy"></i> 복사
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        container.className = "space-y-3";
+        container.innerHTML = rooms.map(room => `
+          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+              <span class="font-black text-lg text-slate-900 w-20">${room.roomNo}</span>
+              <span class="text-xs px-2.5 py-1 rounded-full border font-bold ${room.badgeBg}">${room.floor} / ${room.genderLabel} (${room.type})</span>
+            </div>
+            <div class="flex flex-wrap gap-1.5 items-center">
+              ${room.members.map(m => `<span class="bg-slate-100 text-slate-800 text-xs font-bold px-2.5 py-1 rounded-lg border border-slate-200">${m}</span>`).join('')}
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      const cardBtn = document.getElementById('viewCardBtn');
+      const listBtn = document.getElementById('viewListBtn');
+
+      if (mode === 'card') {
+        cardBtn.className = "px-2.5 py-1.5 rounded-md font-medium text-slate-800 bg-white shadow-sm";
+        listBtn.className = "px-2.5 py-1.5 rounded-md font-medium text-slate-600 hover:text-slate-900";
+      } else {
+        listBtn.className = "px-2.5 py-1.5 rounded-md font-medium text-slate-800 bg-white shadow-sm";
+        cardBtn.className = "px-2.5 py-1.5 rounded-md font-medium text-slate-600 hover:text-slate-900";
+      }
+      filterRooms();
+    }
+
+    // 6. 식사 데이터 렌더링
+    function renderMeals() {
+      const container = document.getElementById('mealsContainer');
+      container.innerHTML = mealData.map(day => `
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="bg-slate-800 text-white px-5 py-3.5 font-bold text-sm sm:text-base flex items-center justify-between">
+            <span><i class="fa-regular fa-calendar-check text-yellow-400 mr-2"></i>${day.date}</span>
+            <span class="text-xs font-normal text-slate-300">총 ${day.meals.length}식 제공</span>
+          </div>
+          <div class="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            ${day.meals.map(m => `
+              <div class="border border-slate-200 rounded-xl overflow-hidden flex flex-col justify-between hover:border-sky-300 transition shadow-xs">
+                <div class="relative h-44 bg-slate-100 overflow-hidden">
+                  <img src="${m.img}" alt="${m.place}" class="w-full h-full object-cover transition transform hover:scale-105 duration-300">
+                  <div class="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md text-white text-xs font-bold px-2.5 py-1 rounded-lg">
+                    ${m.type}
+                  </div>
+                  <div class="absolute bottom-3 right-3 bg-yellow-400 text-slate-900 text-xs font-extrabold px-2.5 py-1 rounded-full shadow-sm">
+                    ${m.tag}
+                  </div>
+                </div>
+                <div class="p-4 flex-grow flex flex-col justify-between">
+                  <div>
+                    <h4 class="font-bold text-slate-900 text-base mb-1">${m.place}</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed">${m.desc}</p>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 7. 타임라인 일정 렌더링 & 서브탭 Switch
+    function switchDayTab(day) {
+      activeDayTab = day;
+      document.querySelectorAll('.day-tab-btn').forEach(b => {
+        b.className = 'day-tab-btn border-b-2 border-transparent text-slate-500 hover:text-slate-800 font-medium px-4 py-2 text-sm flex items-center gap-1.5';
+      });
+      document.getElementById(`dayTab-${day}`).className = 'day-tab-btn border-b-2 border-sky-600 text-sky-600 font-bold px-4 py-2 text-sm flex items-center gap-1.5';
+      renderSchedule();
+    }
+
+    function renderSchedule() {
+      const timeline = document.getElementById('scheduleTimeline');
+      const items = scheduleData[activeDayTab] || [];
+
+      timeline.innerHTML = items.map((item, idx) => {
+        let iconBg = "bg-sky-500 text-white";
+        if (item.type === 'meal') iconBg = "bg-amber-500 text-white";
+        else if (item.type === 'move') iconBg = "bg-indigo-600 text-white";
+        else if (item.type === 'rest') iconBg = "bg-slate-600 text-white";
+        else if (item.type === 'finish') iconBg = "bg-emerald-600 text-white";
+
+        const busAnim = item.type === 'move' ? '<i class="fa-solid fa-bus text-indigo-600 animate-bus ml-1"></i>' : '';
+
+        return `
+          <div class="relative pl-6 sm:pl-8 group schedule-card-item" id="schedule-item-${activeDayTab}-${idx}" data-time="${item.time}">
+            <!-- 타임라인 아이콘 뱃지 -->
+            <div class="absolute -left-3.5 top-0 w-7 h-7 rounded-full ${iconBg} flex items-center justify-center text-xs shadow-md border-2 border-white icon-badge">
+              <i class="fa-solid ${item.icon}"></i>
+            </div>
+            
+            <!-- 일정 내용 카드 -->
+            <div class="card-box bg-white p-4 rounded-xl border border-slate-200 shadow-xs transition duration-200">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-black text-sky-600 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-100">
+                  <i class="fa-regular fa-clock mr-1"></i>${item.time}
+                </span>
+              </div>
+              <h4 class="font-bold text-slate-900 text-sm sm:text-base mb-1 flex items-center">
+                ${item.title} ${busAnim}
+              </h4>
+              <p class="text-xs text-slate-500">${item.desc}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      highlightCurrentSchedule();
+    }
+
+    // 현재 시간에 맞춰 자동 하이라이트 및 이동 기능 (실제 11월 11일~13일 당일에만 작동)
+    function highlightCurrentSchedule() {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1;
+      const currentDate = now.getDate();
+      const currentHours = String(now.getHours()).padStart(2, '0');
+      const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+      const currentTimeStr = `${currentHours}:${currentMinutes}`;
+
+      // 기존 하이라이트/진행중 뱃지 초기화
+      document.querySelectorAll('.card-box').forEach(box => {
+        box.classList.remove('border-2', 'border-emerald-500', 'bg-emerald-50/30', 'shadow-lg');
+        const badge = box.querySelector('.status-badge');
+        if (badge) badge.remove();
+      });
+
+      // 2026년 11월 11일 ~ 13일 실제 날짜가 아니면 하이라이트를 표시하지 않음
+      if (currentYear !== 2026 || currentMonth !== 11 || currentDate < 11 || currentDate > 13) {
+        document.getElementById('realtimeStatusText').innerText = `테마학습 여행 기간(2026.11.11 ~ 11.13)에 실시간으로 버스 및 일정이 추적됩니다.`;
+        return;
+      }
+
+      // 오늘 날짜와 현재 활성화된 탭 날짜가 다르면 진행하지 않음
+      let todayDayTab = 1;
+      if (currentDate === 12) todayDayTab = 2;
+      else if (currentDate === 13) todayDayTab = 3;
+
+      if (activeDayTab !== todayDayTab) {
+        document.getElementById('realtimeStatusText').innerText = `오늘(${currentMonth}/${currentDate})은 ${todayDayTab}일차 일정입니다. [${todayDayTab}일차] 탭에서 실시간 위치가 표시됩니다.`;
+        return;
+      }
+
+      document.getElementById('realtimeStatusText').innerText = `현재 시각 (${currentTimeStr}) 기준 실시간 일정을 추적 중입니다.`;
+
+      const items = scheduleData[activeDayTab] || [];
+      let activeIndex = -1;
+
+      for (let i = 0; i < items.length; i++) {
+        if (currentTimeStr >= items[i].time) {
+          activeIndex = i;
+        }
+      }
+
+      if (activeIndex !== -1) {
+        const activeCard = document.getElementById(`schedule-item-${activeDayTab}-${activeIndex}`);
+        if (activeCard) {
+          const cardBox = activeCard.querySelector('.card-box');
+          if (cardBox) {
+            cardBox.classList.add('border-2', 'border-emerald-500', 'bg-emerald-50/30', 'shadow-lg');
+            const titleEl = cardBox.querySelector('h4');
+            if (titleEl && !titleEl.querySelector('.status-badge')) {
+              titleEl.insertAdjacentHTML('beforeend', ` <span class="status-badge bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full ml-1"><i class="fa-solid fa-signal mr-1"></i>현재 진행 중</span>`);
+            }
+          }
+        }
+      }
+    }
+
+    function checkCurrentSchedule(isManual = false) {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+      const date = now.getDate();
+      
+      let day = 1;
+      if (year === 2026 && month === 11) {
+        if (date === 12) day = 2;
+        else if (date === 13) day = 3;
+      }
+
+      switchDayTab(day);
+
+      setTimeout(() => {
+        const activeCard = document.querySelector('.border-emerald-500');
+        if (activeCard) {
+          activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          showToast("현재 시간의 진행 일정으로 이동했습니다!");
+        } else {
+          showToast(`현재 ${day}일차 일정을 확인합니다.`);
+        }
+      }, 100);
+    }
+
+    // 8. 모달 & 이미지 저장 & 복사 기능
+    function openTableModal() {
+      document.getElementById('tableModal').classList.remove('hidden');
+    }
+
+    function closeTableModal() {
+      document.getElementById('tableModal').classList.add('hidden');
+    }
+
+    function downloadImage() {
+      const captureArea = document.getElementById('captureArea');
+      showToast("이미지를 생성하는 중입니다...");
+      html2canvas(captureArea, { scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `공현진초_수학여행_방배정표.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showToast("이미지가 성공적으로 저장되었습니다!");
+      }).catch(err => {
+        showToast("이미지 생성 중 오류가 발생했습니다.");
+      });
+    }
+
+    function copyRoomInfo(roomNo, members) {
+      const text = `[2026 공현진 테마학습여행 방배정]\n- 방번호: ${roomNo}\n- 배정학생: ${members}`;
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      showToast(`${roomNo} 정보가 클립보드에 복사되었습니다!`);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      toastMsg.innerText = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2500);
+    }
+
+    // 초기 실행
+    window.onload = function() {
+      renderSchedule();
+      renderMeals();
+      filterRooms();
+      setInterval(highlightCurrentSchedule, 30000); // 30초마다 자동 시각 업데이트
+    };
+  </script>
+</body>
+</html>
